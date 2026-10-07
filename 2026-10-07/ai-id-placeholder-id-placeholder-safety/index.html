@@ -44,22 +44,24 @@
           <div class="side-alert"><span>AI</span><div><b>위험 행동 감지 활성화</b><small>전 관제 구역 실시간 분석 중</small></div></div>
         </aside>
         <section class="content">
-          <div class="content-heading"><div><p class="breadcrumb">부산광역시 / <span id="districtName">영도구</span></p><h2 id="pierName">태종대 방파제</h2><p id="pierLocation" class="location">부산광역시 영도구 동삼동</p></div><div class="risk-chip"><span>현재 위험도</span><b id="riskValue">주의</b></div></div>
+          <div class="content-heading"><div><p class="breadcrumb">부산광역시 / <span id="districtName">영도구</span></p><h2 id="pierName">태종대 방파제</h2><p id="pierLocation" class="location">부산광역시 영도구 동삼동</p><p id="dataSource" class="data-source">관측 데이터 연결 대기</p></div><div class="risk-chip"><span>현재 위험도</span><b id="riskValue">주의</b></div></div>
           <div class="kpi-grid">
-            <article class="kpi rain"><span class="kpi-icon">☔</span><div><small>강수량</small><b id="rainValue">0.0 <em>mm</em></b></div><p>지난 1시간</p></article>
-            <article class="kpi wind"><span class="kpi-icon">≋</span><div><small>풍속</small><b id="windValue">7.2 <em>m/s</em></b></div><p id="windNote">남동풍</p></article>
-            <article class="kpi wave"><span class="kpi-icon">≈</span><div><small>파고</small><b id="waveValue">1.1 <em>m</em></b></div><p id="waveNote">보통</p></article>
+            <article class="kpi rain"><span class="kpi-icon">☔</span><div><small>강수량</small><b id="rainValue">— <em>mm</em></b></div><p id="rainNote">연결 대기</p></article>
+            <article class="kpi wind"><span class="kpi-icon">≋</span><div><small>풍속</small><b id="windValue">— <em>m/s</em></b></div><p id="windNote">연결 대기</p></article>
+            <article class="kpi wave"><span class="kpi-icon">≈</span><div><small>파고</small><b id="waveValue">— <em>m</em></b></div><p id="waveNote">연결 대기</p></article>
             <article class="kpi cctv"><span class="kpi-icon">◉</span><div><small>CCTV 상태</small><b id="cctvValue">04 <em>/ 04</em></b></div><p class="safe">정상 작동</p></article>
           </div>
           <div class="dashboard-grid">
-            <article class="map-card panel"><div class="panel-title"><div><p class="section-label">LIVE LOCATION</p><h3>방파제 현황 지도</h3></div><span class="map-live"><i></i> LIVE</span></div><div class="map" id="map"><div class="sea-label sea-label-one">대한해협</div><div class="land land-one"></div><div class="land land-two"></div><div class="road road-one"></div><div class="road road-two"></div><div id="mapMarker" class="map-marker"><i></i><span id="mapPierLabel">태종대 방파제</span></div><div class="map-controls"><button>+</button><button>−</button></div><div class="map-caption">BUSAN · GPS MONITORING</div></div></article>
+            <article class="map-card panel"><div class="panel-title"><div><p class="section-label">LIVE LOCATION</p><h3>방파제 현황 지도</h3></div><span class="map-live"><i></i> LIVE</span></div><div class="map" id="map"><div id="kakaoMap" aria-label="카카오 지도"></div><div class="map-fallback"><div class="sea-label sea-label-one">대한해협</div><div class="land land-one"></div><div class="land land-two"></div><div class="road road-one"></div><div class="road road-two"></div><div id="mapMarker" class="map-marker"><i></i><span id="mapPierLabel">태종대 방파제</span></div></div><div id="mapNotice" class="map-notice hidden"></div><div class="map-controls"><button>+</button><button>−</button></div><div class="map-caption">BUSAN · GPS MONITORING</div></div></article>
             <article class="alert-card panel"><div class="panel-title"><div><p class="section-label">AI DETECTION</p><h3>실시간 안전 알림</h3></div><button class="more">전체 보기 →</button></div><div id="alertList" class="alert-list"></div></article>
           </div>
-          <div class="bottom-grid"><article class="panel zone-card"><div class="panel-title"><div><p class="section-label">RESTRICTED AREA</p><h3>금지구역 안내</h3></div><span id="zoneBadge" class="zone-badge">1개 구역</span></div><div class="zone-content"><span class="zone-icon">⚠</span><div><b id="zoneTitle">너울성 파도 주의 구역</b><p id="zoneText">방파제 끝단 80m 구간은 기상 악화 시 출입이 통제될 수 있습니다.</p></div></div></article><article class="panel weather-card"><div><p class="section-label">MARINE FORECAST</p><h3>향후 3시간 예보</h3></div><div class="forecast"><span>14:00 <b>☀</b> 19°</span><span>15:00 <b>☀</b> 18°</span><span>16:00 <b>☁</b> 17°</span></div></article></div>
+          <div class="bottom-grid"><article class="panel zone-card"><div class="panel-title"><div><p class="section-label">RESTRICTED AREA · CCTV</p><h3>금지구역 안내 및 CCTV</h3></div><span id="zoneBadge" class="zone-badge">검증 대기</span></div><div class="zone-content"><span class="zone-icon">⚠</span><div><b id="zoneTitle">공식 통제 정보 확인 대기</b><p id="zoneText">관할 기관의 최신 고시 데이터를 등록한 뒤 표시됩니다.</p></div></div><div class="cctv-console"><div class="cctv-screen"><span class="cctv-live"><i></i> LIVE</span><span class="cctv-camera">◉ CCTV-01</span><p id="cctvLocation">태종대 방파제 · 카메라 연결 대기</p><small>실제 송출 URL(HLS/RTSP 게이트웨이) 연결 시 영상이 표시됩니다.</small></div><div id="occupancyBadge" class="occupancy safe"><span>AI 인원 감지</span><b><em id="occupancyCount">0</em>명</b><small id="occupancyStatus">현장 인원 없음</small></div></div></article><article class="panel weather-card"><div><p class="section-label">MARINE FORECAST</p><h3>향후 3시간 예보</h3></div><div class="forecast"><span>14:00 <b>☀</b> 19°</span><span>15:00 <b>☀</b> 18°</span><span>16:00 <b>☁</b> 17°</span></div></article></div>
         </section>
       </div>
     </section>
   </main>
+  <script src="data/locations.js"></script>
+  <script src="map.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
