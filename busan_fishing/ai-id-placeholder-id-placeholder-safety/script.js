@@ -6,12 +6,13 @@ const loginId = document.getElementById('loginId');
 const loginPassword = document.getElementById('loginPassword');
 const themeButton = document.getElementById('themeButton');
 
-const RISK_LABEL = { danger: '위험', caution: '주의', warning: '보통', safe: '낮음' };
+const RISK_LABEL = { danger: '위험', caution: '주의', warning: '관심', safe: '정상', none: '데이터 없음' };
+const RISK_FILL = { safe: 25, warning: 50, caution: 75, danger: 100 };
 const DIRECTIONS = ['북', '북동', '동', '남동', '남', '남서', '서', '북서'];
 const CCTV_COUNT = '04';
 const REFRESH_MS = 60000;
 // Keep the demo count consistent with the three people shown in the mock CCTV scene.
-const DEMO_OCCUPANCY_COUNT = 3;
+const DEMO_OCCUPANCY_COUNT = 0; // CCTV 연동 전이므로 인원 0 (연동 후 실제 값으로 교체)
 const PIER_OCCUPANCY = Object.fromEntries(window.BUSAN_AREAS.flatMap(area => area.piers.map(pier => [pier.id, DEMO_OCCUPANCY_COUNT])));
 
 let currentArea = window.BUSAN_AREAS.find(a => a.name === '영도구');
@@ -24,7 +25,7 @@ function renderLocations() {
   root.innerHTML = window.BUSAN_AREAS.map(area => {
     const active = area.name === currentArea.name;
     const noPiers = !area.piers.length;
-    return `<div><button class="district ${active ? 'active' : ''} ${noPiers ? 'unavailable' : ''}" data-area="${area.name}">${area.name}<span>${noPiers ? '—' : active ? '⌃' : '⌄'}</span></button>${active && !noPiers ? `<div class="pier-list">${area.piers.map(pier => `<button class="pier ${pier.id === currentPier.id ? 'active' : ''}" data-pier="${pier.id}">● ${pier.name}</button>`).join('')}</div>` : ''}</div>`;
+    return `<div><button class="district ${active ? 'active' : ''} ${noPiers ? 'unavailable' : ''}" data-area="${area.name}">${area.name}${noPiers ? '<span class="dash">—</span>' : '<span class="chev"></span>'}</button>${active && !noPiers ? `<div class="pier-list">${area.piers.map(pier => `<button class="pier ${pier.id === currentPier.id ? 'active' : ''}" data-pier="${pier.id}"><i></i>${pier.name}</button>`).join('')}</div>` : ''}</div>`;
   }).join('');
   root.querySelectorAll('.district:not(.unavailable)').forEach(button => {
     button.onclick = () => {
@@ -58,33 +59,30 @@ function selectedRisk(weatherRisk) {
 
 function renderRisk(risk) {
   const chip = document.querySelector('.risk-chip');
-  chip.className = `risk-chip risk-${risk}`;
-  document.getElementById('riskValue').textContent = RISK_LABEL[risk];
+  chip.className = `risk-chip risk-${risk || 'none'}`;
+  document.getElementById('riskValue').textContent = risk ? RISK_LABEL[risk] : '산출값 없음';
+  const fill = document.getElementById('totalFill');
+  fill.style.width = risk ? `${RISK_FILL[risk]}%` : '0';
+  fill.style.background = risk ? `var(--${{ safe: 'green', warning: 'yellow', caution: 'orange', danger: 'red' }[risk]})` : '';
+  document.getElementById('totalValue').textContent = risk ? RISK_LABEL[risk] : '—';
+  document.getElementById('totalBadge').textContent = risk ? '실시간' : '산출값 없음';
+  document.getElementById('totalNote').textContent = risk ? '파고·풍속·강수 기준' : '환경 데이터 연동 후 표시';
 }
 
 function updateCctvPanel() {
   const count = PIER_OCCUPANCY[currentPier.id] ?? 0;
-  const level = occupancyLevel(count);
-  const status = count === 0 ? '현장 인원 없음' : count >= 10 ? '혼잡 감지 · 즉시 확인 필요' : count >= 4 ? '인원 증가 · 주의 관찰' : '정상 인원 감지';
-  const badge = document.getElementById('occupancyBadge');
-  badge.className = `occupancy ${level}`;
-  document.getElementById('occupancyCount').textContent = count;
-  document.getElementById('occupancyStatus').textContent = status;
-  document.getElementById('cctvLocation').textContent = `${currentPier.name} · ${activeCctv === 1 ? '입구 방향' : '끝단 방향'}`;
-  const label = document.getElementById('cctvCameraLabel');
-  const pager = document.getElementById('cctvPager');
-  const meta = document.getElementById('cctvMeta');
-  const cameraArea = { '영도구':'YOUNGDO', '해운대구':'HAEUNDAE', '서구':'SEO', '사하구':'SAHA', '기장군':'GIJANG' }[currentArea.name] || 'BUSAN';
-  if (label) label.textContent = `CAM-0${activeCctv}-${cameraArea}`;
-  if (pager) pager.textContent = `${activeCctv} / 2`;
-  if (meta) meta.textContent = `데모 장면 · ${DEMO_OCCUPANCY_COUNT}명 고정 · ${activeCctv === 1 ? '방파제 입구 방향' : '방파제 끝단 방향'}`;
+  document.getElementById('occupancyCount').textContent = count > 0 ? `${count}명` : '—';
+  document.getElementById('occupancyStatus').textContent = count > 0 ? '감지 중' : '데이터 없음';
 }
 
-function setKpi(valueId, noteId, value, unit, note) {
+function setKpi(valueId, noteId, value, unit, note, max) {
   const target = document.getElementById(valueId);
-  target.innerHTML = value === null || value === undefined
-    ? `— <em>${unit}</em>`
-    : `${value} <em>${unit}</em>`;
+  const card = target.closest('.kpi');
+  const has = value !== null && value !== undefined;
+  target.innerHTML = `${has ? value : '—'}<em>${unit}</em>`;
+  card.classList.toggle('live', has);
+  card.querySelector('.pill').textContent = has ? '실시간' : '데이터 없음';
+  card.querySelector('.fill').style.width = has ? `${Math.min(100, (Number(value) / max) * 100)}%` : '0';
   if (noteId) document.getElementById(noteId).textContent = note;
 }
 
@@ -130,43 +128,35 @@ function sourceLine(data) {
 
 function updateDashboard() {
   document.getElementById('districtName').textContent = currentArea.name;
+  document.getElementById('crumbPier').textContent = currentPier.name;
   document.getElementById('pierName').textContent = currentPier.name;
-  document.getElementById('pierLocation').textContent = currentPier.location;
+  document.getElementById('pierLocation').textContent = `${currentPier.location.split(' ').slice(0, 2).join(' ')} · 관제 구역`;
   document.getElementById('mapPierLabel').textContent = currentPier.name;
-  document.getElementById('cctvValue').innerHTML = `${CCTV_COUNT} <em>/ ${CCTV_COUNT}</em>`;
   updateCctvPanel();
-
-  const cached = weatherCache[currentPier.id];
-  if (cached) applyWeather(cached, { silent: true });
-  else applyWeather(null, { silent: true });
-
-  document.getElementById('zoneTitle').textContent = '공식 통제 정보 확인 대기';
-  document.getElementById('zoneText').textContent = '낚시 금지·출입 통제는 관할 기관의 최신 고시 데이터를 등록한 뒤 표시됩니다.';
-  document.getElementById('zoneBadge').textContent = '검증 대기';
-
+  applyWeather(weatherCache[currentPier.id] || null, { silent: true });
   loadWeather();
   updateKakaoMap();
 }
 
 function applyWeather(data, { silent = false } = {}) {
   const risk = data ? riskFrom(data.marine, data.rain) : null;
-  renderRisk(selectedRisk(risk || demoRisk[currentPier.id] || 'safe'));
   liveRisk[currentPier.id] = risk || undefined;
+  renderRisk(risk ? selectedRisk(risk) : null);
 
   if (!data) {
-    setKpi('rainValue', 'rainNote', null, 'mm', silent ? '연결 대기' : '불러오는 중');
-    setKpi('windValue', 'windNote', null, 'm/s', silent ? '연결 대기' : '불러오는 중');
-    setKpi('waveValue', 'waveNote', null, 'm', silent ? '연결 대기' : '불러오는 중');
-    document.getElementById('dataSource').textContent = silent ? '이전 관측 대기' : '관측 데이터 불러오는 중';
+    setKpi('rainValue', 'rainNote', null, 'mm', silent ? '센서 연동 전' : '불러오는 중', 20);
+    setKpi('windValue', 'windNote', null, 'm/s', silent ? '센서 연동 전' : '불러오는 중', 20);
+    setKpi('waveValue', 'waveNote', null, 'm', silent ? '센서 연동 전' : '불러오는 중', 3);
+    document.getElementById('dataSource').textContent = silent ? '기상 데이터 연동 전 · 갱신 시각 없음' : '관측 데이터 불러오는 중';
     return;
   }
 
-  const rain = data.rain;
-  const wave = data.marine?.wave;
-  const wind = data.marine?.wind;
-  setKpi('rainValue', 'rainNote', rain?.value === null || rain?.value === undefined ? null : rain.value.toFixed(1), 'mm', rain ? '지난 1시간' : '강수 관측 없음');
-  setKpi('windValue', 'windNote', wind?.value === null || wind?.value === undefined ? null : wind.value.toFixed(1), 'm/s', windNote(data.marine));
-  setKpi('waveValue', 'waveNote', wave?.value === null || wave?.value === undefined ? null : wave.value.toFixed(1), 'm', waveLabel(wave?.value));
+  const { rain, marine } = data;
+  const wave = marine?.wave, wind = marine?.wind;
+  const val = (v, d = 1) => (v === null || v === undefined ? null : v.toFixed(d));
+  setKpi('rainValue', 'rainNote', val(rain?.value), 'mm', rain ? '지난 1시간' : '강수 관측 없음', 20);
+  setKpi('windValue', 'windNote', val(wind?.value), 'm/s', windNote(marine), 20);
+  setKpi('waveValue', 'waveNote', val(wave?.value), 'm', waveLabel(wave?.value), 3);
   document.getElementById('dataSource').textContent = sourceLine(data);
   renderAlerts(data);
   updateKakaoMap(false);
@@ -194,17 +184,10 @@ async function loadWeather() {
 }
 
 function renderAlerts(data, error) {
-  const weatherAlert = data
-    ? ['info', '기상 관측 연결', sourceLine(data), '실시간']
-    : error
-      ? ['danger', '기상 관측 연결 실패', error.message, '오류']
-      : ['info', '기상 관측 연결', '관측 데이터를 불러오는 중입니다.', '연결 대기'];
-  const items = [
-    ['warning', '안전모 미착용 감지', 'CCTV 기반 AI 감지는 연결 후 활성화됩니다.', '연결 대기'],
-    weatherAlert,
-    ['danger', '통제구역 데이터', '공식 고시 데이터 등록 전에는 안전 판단에 사용하지 마세요.', '안내'],
-  ];
-  document.getElementById('alertList').innerHTML = items.map(([type, title, text, time]) => `<div class="alert ${type}"><div class="alert-top"><b>${title}</b><time>${time}</time></div><p>${text}</p></div>`).join('');
+  const list = document.getElementById('alertList');
+  list.innerHTML = error
+    ? `<div class="alert danger"><div class="alert-top"><b>기상 관측 연결 실패</b><time>오류</time></div><p>${error.message}</p></div>`
+    : '<div class="alert-empty">현재 감지된 이벤트가 없습니다</div>';
 }
 
 function showDashboard() {
@@ -251,15 +234,13 @@ document.getElementById('userMenuButton').onclick = () => {
 };
 document.getElementById('logoutButton').onclick = showLogin;
 function applyTheme(theme) {
-  const light = theme === 'light';
-  document.body.classList.toggle('light-theme', light);
-  themeButton.innerHTML = light ? '☾ <span>다크 모드</span>' : '☀ <span>라이트 모드</span>';
-  themeButton.setAttribute('aria-label', light ? '다크 모드로 전환' : '라이트 모드로 전환');
-  localStorage.setItem('breakwaterTheme', theme);
-  if (typeof updateMapTheme === 'function') updateMapTheme(theme);
+  const dark = theme === 'dark';
+  document.body.classList.toggle('dark-theme', dark);
+  themeButton.textContent = dark ? '라이트 모드' : '다크 모드';
+  localStorage.setItem('breakwaterTheme2', theme);
   setTimeout(refreshKakaoMapLayout, 50);
 }
-themeButton.onclick = () => applyTheme(document.body.classList.contains('light-theme') ? 'dark' : 'light');
+themeButton.onclick = () => applyTheme(document.body.classList.contains('dark-theme') ? 'light' : 'dark');
 function playAlarm() {
   try {
     const context = new (window.AudioContext || window.webkitAudioContext)();
@@ -297,9 +278,6 @@ function openEmergency(type) {
 document.getElementById('broadcastButton').onclick = () => openEmergency('broadcast');
 document.getElementById('dispatchButton').onclick = () => openEmergency('dispatch');
 document.getElementById('closeEmergencyButton').onclick = () => document.getElementById('emergencyOverlay').classList.add('hidden');
-function changeCctv(direction) { activeCctv = activeCctv + direction; if (activeCctv < 1) activeCctv = 2; if (activeCctv > 2) activeCctv = 1; updateCctvPanel(); }
-document.getElementById('prevCctvButton').onclick = () => changeCctv(-1);
-document.getElementById('nextCctvButton').onclick = () => changeCctv(1);
 document.addEventListener('click', event => {
   if (!event.target.closest('.user-area')) document.getElementById('userMenu').classList.add('hidden');
 });
@@ -318,5 +296,5 @@ renderLocations();
 renderAlerts(null);
 updateDashboard();
 initializeKakaoMap();
-applyTheme(localStorage.getItem('breakwaterTheme') || 'dark');
+applyTheme(localStorage.getItem('breakwaterTheme2') || 'light');
 if (localStorage.getItem('breakwaterLoggedIn') === 'true') showDashboard();

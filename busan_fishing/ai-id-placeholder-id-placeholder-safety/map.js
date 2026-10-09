@@ -1,15 +1,16 @@
 let kakaoMap = null;
 let pierMarkers = [];
 
-const demoRisk = { 'busan-port':'caution', songdo:'caution', taejongdae:'danger', yongho:'caution', mipo:'warning', cheongsapo:'safe', dadaepo:'warning', gadeokdo:'safe', millak:'warning', daebyeon:'safe', ilgwang:'safe' };
-const riskColor = { danger:'#ef4444', caution:'#f97316', warning:'#eab308', safe:'#22c55e' };
+const riskColor = { danger:'#d13c33', caution:'#d9742f', warning:'#e0a63a', safe:'#3f9b5a', none:'#7c879b' };
 const liveRisk = {};
 const riskRank = { safe:0, warning:1, caution:2, danger:3 };
 
 function riskOf(id) {
-  const weather = liveRisk[id] || demoRisk[id] || 'safe';
+  const weather = liveRisk[id];
   const people = typeof occupancyLevel === 'function' ? occupancyLevel(PIER_OCCUPANCY[id] ?? 0) : 'safe';
-  return riskRank[people] > riskRank[weather] ? people : weather;
+  if (!weather && people === 'safe') return 'none'; // no live data yet
+  const base = weather || 'safe';
+  return riskRank[people] > riskRank[base] ? people : base;
 }
 function setMapNotice(message) {
   const notice = document.getElementById('mapNotice');
