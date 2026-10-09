@@ -1,0 +1,78 @@
+/* Operational-control refinement: keeps the existing layout while reducing decorative UI. */
+:root {
+  --navy: #0d1117;
+  --navy2: #0f172a;
+  --panel: #111827;
+  --line: #1e293b;
+  --text: #e5edf7;
+  --muted: #94a3b8;
+}
+body, button, input { font-family: Inter, Pretendard, "Noto Sans KR", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+.dashboard-page, .dashboard-shell, .dashboard-content { background: #0d1117; }
+.topbar, .sidebar, .panel, .kpi, .risk-chip { border-color: #1e293b; box-shadow: none; }
+.panel, .kpi { background: #0f172a; }
+.panel-title h3, .content-heading h2, .sidebar h2 { letter-spacing: -0.025em; line-height: 1.32; }
+.section-label { font-size: .7rem; letter-spacing: .1em; font-weight: 700; }
+.top-brand b { font-size: .91rem; letter-spacing: -.02em; }
+.top-brand small, .top-status { font-size: .74rem; }
+
+.risk-chip { transition: background-color .2s ease, border-color .2s ease, color .2s ease; }
+.risk-chip.risk-safe { background:#12372b; border-color:#22c55e; color:#86efac; }
+.risk-chip.risk-warning { background:#3b3214; border-color:#eab308; color:#fde047; }
+.risk-chip.risk-caution { background:#402515; border-color:#f97316; color:#fdba74; }
+.risk-chip.risk-danger { background:#401b22; border-color:#ef4444; color:#fca5a5; }
+
+/* Compact, data-first environmental widgets. */
+.kpi-grid { gap: 10px; }
+.kpi { min-height: 108px; padding: 17px 18px; }
+.kpi .kpi-icon { font-size: 1.08rem; width: 24px; height: 24px; opacity: .8; }
+.kpi small { font-size: .76rem; color: var(--muted); }
+.kpi b { font-size: 1.55rem; line-height: 1.1; letter-spacing: -.04em; }
+.kpi b em { font-size: .75rem; }
+.kpi p { margin-top: 13px; font-size: .7rem; }
+
+/* Map: compact pins and risk-aware clusters. */
+#kakaoMap { background: #101827; }
+.leaflet-container { font: 12px/1.35 Inter, Pretendard, sans-serif; }
+.leaflet-control-zoom a { background:#111827 !important; border-color:#334155 !important; color:#e5edf7 !important; }
+.leaflet-control-attribution { background:rgba(15,23,42,.72) !important; color:#94a3b8 !important; }
+.leaflet-control-attribution a { color:#93c5fd !important; }
+.pier-pin { display:block; width:12px; height:12px; border-radius:50%; background:var(--pin); border:2px solid rgba(255,255,255,.9); box-shadow:0 0 0 3px color-mix(in srgb, var(--pin) 26%, transparent), 0 2px 5px rgba(0,0,0,.42); cursor:pointer; }
+.pier-pin.selected { width:16px; height:16px; transform:translate(-2px,-2px); box-shadow:0 0 0 4px color-mix(in srgb, var(--pin) 30%, transparent), 0 2px 7px rgba(0,0,0,.55); }
+.control-cluster { display:grid; place-items:center; width:28px; height:28px; border-radius:50%; background:#0f172a; color:#f8fafc; border:2px solid var(--cluster); box-shadow:0 0 0 3px color-mix(in srgb, var(--cluster) 22%, transparent); font-size:11px; font-weight:800; }
+.marker-cluster, .marker-cluster div { background:transparent !important; }
+.map-legend { font-size:.66rem; gap:7px; padding:6px 8px; border:1px solid rgba(148,163,184,.26); background:rgba(15,23,42,.84); }
+.map-caption { font-size:.61rem; letter-spacing:.08em; }
+
+/* CCTV uses a flat video HUD rather than perspective / wireframe decoration. */
+.cctv-screen { min-height: 310px; background:#050b14; border:1px solid #1e293b; border-radius:8px; overflow:hidden; }
+.cctv-screen::before { display:none; }
+.cctv-scene { position:absolute; inset:0; filter:saturate(.78) contrast(1.08); }
+.cctv-hud { position:absolute; left:12px; right:12px; display:flex; align-items:center; z-index:8; color:#f8fafc; font-size:10px; letter-spacing:.06em; text-shadow:0 1px 3px #000; }
+.cctv-hud-top { top:11px; gap:10px; }
+.cctv-hud-bottom { bottom:10px; justify-content:space-between; }
+.cctv-hud-bottom p, .cctv-hud-bottom small { margin:0; color:#f8fafc; font-size:10px; font-weight:600; }
+.cctv-hud-bottom small { color:#cbd5e1; font-weight:500; }
+.cctv-live, .cctv-camera { position:static; padding:0; background:transparent; border:0; font-size:10px; font-weight:800; }
+.cctv-live { color:#fb7185; }
+.cctv-live i { width:6px; height:6px; background:#ef4444; box-shadow:0 0 6px #ef4444; }
+.cctv-camera { margin-left:auto; color:#e2e8f0; }
+#cctvTimestamp { color:#e2e8f0; font-variant-numeric:tabular-nums; }
+.cctv-screen > p, .cctv-screen > small { display:none; }
+.detected-person { border:1px solid #fb923c !important; border-radius:0 !important; background:transparent !important; box-shadow:none !important; }
+.detected-person i { display:none; }
+.detected-person::before { content:""; position:absolute; top:3px; left:4px; width:6px; height:6px; border-radius:50%; background:#e2e8f0; }
+.detected-person::after { content:""; position:absolute; left:3px; bottom:2px; width:8px; height:15px; border-radius:4px 4px 1px 1px; background:#94a3b8; }
+.detected-person b { position:absolute; left:-1px; top:-19px; padding:3px 5px; background:#f97316; color:#111827; font-size:9px; line-height:1; font-weight:800; white-space:nowrap; letter-spacing:0; }
+.cctv-nav { z-index:10; }
+
+/* Light mode switches surface treatment with the tile layer. */
+.light-theme .dashboard-page, .light-theme .dashboard-shell, .light-theme .dashboard-content { background:#f5f7fb; }
+.light-theme .panel, .light-theme .kpi { background:#fff; border-color:#dbe3ef; }
+.light-theme .topbar, .light-theme .sidebar, .light-theme .risk-chip { border-color:#dbe3ef; }
+.light-theme .leaflet-control-zoom a { background:#fff !important; border-color:#cbd5e1 !important; color:#1e293b !important; }
+
+@media (max-width: 900px) {
+  .cctv-screen { min-height:250px; }
+  .cctv-hud-bottom { align-items:flex-start; flex-direction:column; gap:3px; }
+}

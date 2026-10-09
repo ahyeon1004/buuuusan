@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>부산광역시 해양안전관제시스템</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main>
+    <section id="loginPage" class="login-page" aria-label="관제센터 로그인">
+      <div class="login-card">
+        <div class="logo-mark big" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 10c2.2 0 2.2-2 4.5-2s2.3 2 4.5 2 2.3-2 4.5-2 2.3 2 4.5 2M3 15c2.2 0 2.2-2 4.5-2s2.3 2 4.5 2 2.3-2 4.5-2 2.3 2 4.5 2"/></svg></div>
+        <h1>부산광역시<br />해양안전관제시스템</h1>
+        <p class="login-subtitle">방파제 낚시 안전 관제센터</p>
+        <form id="loginForm" novalidate>
+          <label><span>관제센터 ID</span><input id="loginId" type="text" autocomplete="username" placeholder="ID를 입력하세요" /></label>
+          <label><span>비밀번호</span><input id="loginPassword" type="password" autocomplete="current-password" placeholder="비밀번호를 입력하세요" /></label>
+          <div class="login-options"><label class="check"><input type="checkbox" /> 로그인 상태 유지</label><button type="button" class="text-button">비밀번호를 잊으셨나요?</button></div>
+          <button class="login-button" type="submit">로그인</button>
+          <p id="loginError" class="login-error" role="alert"></p>
+        </form>
+        <div class="test-account">테스트 계정 <b>admin</b> / <b>1234</b></div>
+      </div>
+    </section>
+
+    <section id="dashboardPage" class="dashboard-page hidden" aria-label="안전 관제 대시보드">
+      <header class="topbar">
+        <a class="top-brand" href="#"><span class="logo-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 10c2.2 0 2.2-2 4.5-2s2.3 2 4.5 2 2.3-2 4.5-2 2.3 2 4.5 2M3 15c2.2 0 2.2-2 4.5-2s2.3 2 4.5 2 2.3-2 4.5-2 2.3 2 4.5 2"/></svg></span><span><b>부산광역시 해양안전관제시스템</b><small>부산 방파제 낚시 안전 관제</small></span></a>
+        <div class="top-status"><i class="live-dot"></i>시스템 상태: 정상 <time id="clock"></time></div>
+        <div class="top-actions">
+          <button id="themeButton" class="theme-button" type="button">다크 모드</button>
+          <div class="user-area"><button id="userMenuButton" class="user-button" aria-expanded="false"><span class="avatar">A</span><span class="user-text"><b>관제센터</b><small>관리자</small></span></button><div id="userMenu" class="user-menu hidden"><button>관리자 정보</button><button id="logoutButton" class="logout">로그아웃</button></div></div>
+        </div>
+      </header>
+      <div class="shell">
+        <aside class="sidebar">
+          <p class="eyebrow">관제 구역 선택</p>
+          <h2>부산 방파제</h2>
+          <div id="districtList" class="district-list"></div>
+        </aside>
+        <section class="content">
+          <div id="emergencyOverlay" class="emergency-overlay hidden" role="alert"><div class="emergency-modal"><span>AI 안전 경보</span><h2 id="emergencyTitle"></h2><p id="emergencyMessage"></p><button id="closeEmergencyButton">경보 확인</button></div></div>
+
+          <div class="content-heading">
+            <div>
+              <p class="breadcrumb">부산광역시 / <span id="districtName"></span> / <b id="crumbPier"></b></p>
+              <h2 id="pierName"></h2>
+              <p id="pierLocation" class="location"></p>
+              <p id="dataSource" class="data-source">기상 데이터 연동 전 · 갱신 시각 없음</p>
+            </div>
+            <div class="risk-chip risk-none"><span>현재 종합 위험도</span><b id="riskValue">산출값 없음</b></div>
+          </div>
+
+          <div class="kpi-grid">
+            <article class="kpi"><header><span>강수량</span><em class="pill">데이터 없음</em></header><div class="kpi-value"><b id="rainValue">—<em>mm</em></b></div><div class="bar"><i class="fill"></i></div><p id="rainNote">센서 연동 전</p></article>
+            <article class="kpi"><header><span>풍속</span><em class="pill">데이터 없음</em></header><div class="kpi-value"><b id="windValue">—<em>m/s</em></b></div><div class="bar"><i class="fill"></i></div><p id="windNote">센서 연동 전</p></article>
+            <article class="kpi"><header><span>파고</span><em class="pill">데이터 없음</em></header><div class="kpi-value"><b id="waveValue">—<em>m</em></b></div><div class="bar"><i class="fill"></i></div><p id="waveNote">센서 연동 전</p></article>
+            <article class="kpi kpi-total"><header><span>종합 위험도</span><em class="pill blue">종합 결과</em></header><div class="kpi-value"><b id="totalValue">—</b><em id="totalBadge" class="pill">산출값 없음</em></div><div class="bar"><i id="totalFill" class="fill"></i></div><p id="totalNote">환경 데이터 연동 후 표시</p></article>
+          </div>
+
+          <div class="dashboard-grid">
+            <article class="panel map-card">
+              <div class="panel-title"><div><p class="eyebrow">실시간 위치</p><h3>방파제 현황 지도</h3></div><span class="map-live">실시간 · 지도 연동 영역</span></div>
+              <div class="map" id="map">
+                <div id="kakaoMap" aria-label="방파제 위치 지도"></div>
+                <div class="map-fallback"><div class="land land-one"></div><div class="land land-two"></div><div class="land land-three"></div><div class="road"></div><div id="mapMarker" class="map-marker"><span id="mapPierLabel"></span><i></i></div></div>
+                <div class="map-legend"><span class="d-safe">정상</span><span class="d-warning">관심</span><span class="d-caution">주의</span><span class="d-danger">위험</span><span class="d-cctv">CCTV</span></div>
+                <div id="mapNotice" class="map-notice hidden"></div>
+                <div class="map-controls"><button aria-label="확대">+</button><button aria-label="축소">−</button></div>
+                <div class="map-caption">지도 API 연동 영역 (임시 배치도)</div>
+              </div>
+            </article>
+            <article class="panel cctv-card">
+              <div class="panel-title"><div><p class="eyebrow">금지구역 · CCTV</p><h3>금지구역 안내 및 CCTV</h3></div><span id="zoneBadge" class="zone-badge">검증 대기</span></div>
+              <div class="zone-notice"><svg viewBox="0 0 24 24"><path d="M12 3 2 20h20L12 3zM12 10v5M12 17.5v.5"/></svg><p id="zoneText">낚시 금지·출입 통제는 관할 기관의 최신 고시 데이터를 등록한 뒤 표시됩니다.</p></div>
+              <div class="cctv-empty"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="13" height="10" rx="2"/><path d="m16 11 5-3v8l-5-3"/></svg><b>등록된 CCTV가 없습니다</b><small>영상 연동 전 · 플레이스홀더</small></div>
+              <div id="occupancyBadge" class="occupancy"><span>AI 인원 감지</span><div><b id="occupancyCount">—</b><em id="occupancyStatus" class="pill dot">데이터 없음</em></div></div>
+              <div class="emergency-actions"><button id="broadcastButton">위험 안내방송</button><button id="dispatchButton">출동 요청</button></div>
+            </article>
+          </div>
+
+          <article class="panel alert-card">
+            <div class="panel-title"><div><p class="eyebrow">AI 안전 감지</p><h3>실시간 안전 알림</h3></div><button class="more">전체 보기 →</button></div>
+            <div id="alertList" class="alert-list"></div>
+          </article>
+        </section>
+      </div>
+    </section>
+  </main>
+  <script src="data/locations.js"></script>
+  <script src="map.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
