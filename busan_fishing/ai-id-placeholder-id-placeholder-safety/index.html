@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>부산 방파제 낚시 안전 관제 시스템</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="refined.css" />
+</head>
+<body>
+  <main>
+    <section id="loginPage" class="login-page" aria-label="관제센터 로그인">
+      <div class="login-orbit orbit-one"></div><div class="login-orbit orbit-two"></div>
+      <div class="login-card">
+        <div class="brand-mark" aria-hidden="true"><span class="lighthouse"></span><span class="wave wave-a"></span><span class="wave wave-b"></span></div>
+        <p class="eyebrow">BUSAN COAST GUARD</p>
+        <h1>부산 방파제 낚시<br />안전 관제 시스템</h1>
+        <p class="login-subtitle">AI 기반 해양 안전 관제센터</p>
+        <form id="loginForm" novalidate>
+          <label><span>👤 관제센터 ID</span><input id="loginId" type="text" autocomplete="username" placeholder="관제센터 ID를 입력하세요" /></label>
+          <label><span>🔒 비밀번호</span><input id="loginPassword" type="password" autocomplete="current-password" placeholder="비밀번호를 입력하세요" /></label>
+          <div class="login-options"><label class="check"><input type="checkbox" /><i></i> 로그인 상태 유지</label><button type="button" class="text-button">비밀번호를 잊으셨나요?</button></div>
+          <button class="login-button" type="submit">로그인 <span>→</span></button>
+          <p id="loginError" class="login-error" role="alert"></p>
+        </form>
+        <div class="test-account">TEST ACCOUNT <b>admin</b> / <b>1234</b></div>
+      </div>
+      <footer class="login-footer"><span>부산 방파제 낚시 안전 관제 시스템</span><span>Safety Monitoring System</span></footer>
+    </section>
+
+    <section id="dashboardPage" class="dashboard-page hidden" aria-label="안전 관제 대시보드">
+      <header class="topbar">
+        <a class="top-brand" href="#"><span class="mini-mark">⚓</span><span><b>부산광역시 해양안전 관제시스템</b><small>부산 방파제 낚시 안전 관제</small></span></a>
+        <div class="top-status"><span class="live-dot"></span> 시스템 상태: 정상 <time id="clock"></time></div><button id="themeButton" class="theme-button" type="button" aria-label="라이트 모드로 전환">☀ <span>라이트 모드</span></button>
+        <div class="user-area"><button id="userMenuButton" class="user-button" aria-expanded="false"><span class="user-icon">A</span><span>관제센터 <small>관리자</small></span><b>⌄</b></button><div id="userMenu" class="user-menu hidden"><button>관리자 정보</button><button id="logoutButton" class="logout">로그아웃</button></div></div>
+      </header>
+      <div class="shell">
+        <aside class="sidebar">
+          <p class="section-label">관제 구역 선택</p>
+          <h2>부산 방파제</h2>
+          <div id="districtList" class="district-list"></div>
+        </aside>
+        <section class="content">
+          <div id="emergencyOverlay" class="emergency-overlay hidden" role="alert"><div class="emergency-modal"><span>⚠ AI 안전 경보</span><h2 id="emergencyTitle">방파제 끝단 위험 감지</h2><p id="emergencyMessage">위험 구역에서 물러나 안전한 장소로 이동하십시오.</p><button id="closeEmergencyButton">경보 확인</button></div></div>
+          <div class="content-heading"><div><p class="breadcrumb">부산광역시 / <span id="districtName">영도구</span></p><h2 id="pierName">태종대 방파제</h2><p id="pierLocation" class="location">부산광역시 영도구 동삼동</p><p id="dataSource" class="data-source">관측 데이터 연결 대기</p></div><div class="risk-chip risk-caution"><span>현재 위험도</span><b id="riskValue">주의</b></div></div>
+          <div class="kpi-grid">
+            <article class="kpi rain"><span class="kpi-icon">☔</span><div><small>강수량</small><b id="rainValue">— <em>mm</em></b></div><p id="rainNote">연결 대기</p></article>
+            <article class="kpi wind"><span class="kpi-icon">≋</span><div><small>풍속</small><b id="windValue">— <em>m/s</em></b></div><p id="windNote">연결 대기</p></article>
+            <article class="kpi wave"><span class="kpi-icon">≈</span><div><small>파고</small><b id="waveValue">— <em>m</em></b></div><p id="waveNote">연결 대기</p></article>
+            <article class="kpi cctv"><span class="kpi-icon">◉</span><div><small>CCTV 상태</small><b id="cctvValue">04 <em>/ 04</em></b></div><p class="safe">정상 작동</p></article>
+          </div>
+          <div class="dashboard-grid">
+            <article class="map-card panel"><div class="panel-title"><div><p class="section-label">실시간 위치</p><h3>방파제 현황 지도</h3></div><span class="map-live"><i></i> 실시간</span></div><div class="map" id="map"><div id="kakaoMap" aria-label="방파제 위치 지도"></div><div class="map-fallback"><div class="sea-label sea-label-one">대한해협</div><div class="land land-one"></div><div class="land land-two"></div><div class="road road-one"></div><div class="road road-two"></div><div id="mapMarker" class="map-marker"><i></i><span id="mapPierLabel">태종대 방파제</span></div></div><div class="map-legend"><b>위험도</b><span class="safe">● 낮음</span><span class="warning">● 보통</span><span class="caution">● 주의</span><span class="danger">● 위험</span></div><div id="mapNotice" class="map-notice hidden"></div><div class="map-controls"><button>+</button><button>−</button></div><div class="map-caption">부산 · 위치 관제</div></div></article>
+            <article class="panel cctv-primary"><div class="panel-title"><div><p class="section-label">금지구역 · CCTV</p><h3>금지구역 안내 및 CCTV</h3></div><span id="zoneBadge" class="zone-badge">검증 대기</span></div><div class="zone-content"><span class="zone-icon">⚠</span><div><b id="zoneTitle">공식 통제 정보 확인 대기</b><p id="zoneText">관할 기관의 최신 고시 데이터를 등록한 뒤 표시됩니다.</p></div></div><div class="cctv-console"><div class="cctv-screen"><div class="cctv-scene"><div class="cctv-sky"></div><div class="cctv-sea"></div><div class="cctv-breakwater"></div><div class="cctv-wave w1"></div><div class="cctv-wave w2"></div><div class="detected-person person-a"><b>Person 1</b></div><div class="detected-person person-b"><b>Person 2</b></div><div class="detected-person person-c"><b>Person 3</b></div></div><div class="cctv-hud cctv-hud-top"><span class="cctv-live"><i></i> LIVE REC</span><time id="cctvTimestamp">2026-10-08 01:30:15</time><span id="cctvCameraLabel" class="cctv-camera">CAM-01-YOUNGDO</span></div><div class="cctv-hud cctv-hud-bottom"><p id="cctvLocation">태종대 방파제</p><small id="cctvMeta">데모 장면 · 3명 고정</small></div><div class="cctv-nav"><button id="prevCctvButton" aria-label="이전 CCTV">‹</button><span id="cctvPager">1 / 2</span><button id="nextCctvButton" aria-label="다음 CCTV">›</button></div></div><div id="occupancyBadge" class="occupancy warning"><span>AI 인원 감지</span><b><em id="occupancyCount">3</em>명</b><small id="occupancyStatus">정상 인원 감지</small></div></div><div class="emergency-actions"><button id="broadcastButton" class="broadcast-button">📢 위험 안내방송</button><button id="dispatchButton" class="dispatch-button">🚨 출동 요청</button></div></article>
+          </div>
+          <div class="bottom-grid"><article class="alert-card panel"><div class="panel-title"><div><p class="section-label">AI 안전 감지</p><h3>실시간 안전 알림</h3></div><button class="more">전체 보기 →</button></div><div id="alertList" class="alert-list"></div></article></div>
+        </section>
+      </div>
+    </section>
+  </main>
+  <script src="data/locations.js"></script>
+  <script src="map.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
