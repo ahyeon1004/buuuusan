@@ -71,11 +71,23 @@ async function initializeKakaoMap() {
     return;
   }
   window.kakao.maps.load(() => {
+    const mapShell = document.getElementById('map');
     kakaoMap = new window.kakao.maps.Map(document.getElementById('kakaoMap'), {
       center:new window.kakao.maps.LatLng(35.145,129.075), level:8
     });
-    document.getElementById('map').classList.add('kakao-ready');
-    setMapNotice(''); renderPierMarkers();
+    // Do not expose a partially composed map.  Kakao first creates blank tile
+    // columns; wait for its tile-complete event before replacing the fallback.
+    let mapReady = false;
+    const revealMap = () => {
+      if (mapReady) return;
+      mapReady = true;
+      mapShell.classList.add('kakao-ready');
+      setMapNotice(''); renderPierMarkers();
+    };
+    window.kakao.maps.event.addListener(kakaoMap, 'tilesloaded', revealMap);
+    setTimeout(() => {
+      if (!mapReady) setMapNotice('지도를 불러오는 중입니다. 잠시 후 다시 시도해 주세요.');
+    }, 3500);
     setTimeout(refreshKakaoMapLayout, 150);
   });
 }

@@ -1,3 +1,5 @@
+
+Index · HTML
 <!doctype html>
 <html lang="ko">
 <head>
@@ -26,7 +28,7 @@
         <div class="test-account">테스트 계정 <b>admin</b> / <b>1234</b></div>
       </div>
     </section>
-
+ 
     <section id="dashboardPage" class="dashboard-page hidden" aria-label="안전 관제 대시보드">
       <header class="topbar">
         <a class="top-brand" href="#"><span class="logo-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 10c2.2 0 2.2-2 4.5-2s2.3 2 4.5 2 2.3-2 4.5-2 2.3 2 4.5 2M3 15c2.2 0 2.2-2 4.5-2s2.3 2 4.5 2 2.3-2 4.5-2 2.3 2 4.5 2"/></svg></span><span><b>부산광역시 해양안전관제시스템</b><small>부산 방파제 낚시 안전 관제</small></span></a>
@@ -44,7 +46,7 @@
         </aside>
         <section class="content">
           <div id="emergencyOverlay" class="emergency-overlay hidden" role="alert"><div class="emergency-modal"><span>AI 안전 경보</span><h2 id="emergencyTitle"></h2><p id="emergencyMessage"></p><button id="closeEmergencyButton">경보 확인</button></div></div>
-
+ 
           <div class="content-heading">
             <div>
               <p class="breadcrumb">부산광역시 / <span id="districtName"></span> / <b id="crumbPier"></b></p>
@@ -54,14 +56,14 @@
             </div>
             <div class="risk-chip risk-none"><span>현재 종합 위험도</span><b id="riskValue">산출값 없음</b></div>
           </div>
-
+ 
           <div class="kpi-grid">
             <article class="kpi"><header><span>강수량</span><em class="pill">데이터 없음</em></header><div class="kpi-value"><b id="rainValue">—<em>mm</em></b></div><div class="bar"><i class="fill"></i></div><p id="rainNote">센서 연동 전</p></article>
             <article class="kpi"><header><span>풍속</span><em class="pill">데이터 없음</em></header><div class="kpi-value"><b id="windValue">—<em>m/s</em></b></div><div class="bar"><i class="fill"></i></div><p id="windNote">센서 연동 전</p></article>
             <article class="kpi"><header><span>파고</span><em class="pill">데이터 없음</em></header><div class="kpi-value"><b id="waveValue">—<em>m</em></b></div><div class="bar"><i class="fill"></i></div><p id="waveNote">센서 연동 전</p></article>
             <article class="kpi kpi-total"><header><span>종합 위험도</span><em class="pill blue">종합 결과</em></header><div class="kpi-value"><b id="totalValue">—</b><em id="totalBadge" class="pill">산출값 없음</em></div><div class="bar"><i id="totalFill" class="fill"></i></div><p id="totalNote">환경 데이터 연동 후 표시</p></article>
           </div>
-
+ 
           <div class="dashboard-grid">
             <article class="panel map-card">
               <div class="panel-title"><div><p class="eyebrow">실시간 위치</p><h3>방파제 현황 지도</h3></div><span class="map-live">실시간 · 지도 연동 영역</span></div>
@@ -77,12 +79,13 @@
             <article class="panel cctv-card">
               <div class="panel-title"><div><p class="eyebrow">금지구역 · CCTV</p><h3>금지구역 안내 및 CCTV</h3></div><span id="zoneBadge" class="zone-badge">검증 대기</span></div>
               <div class="zone-notice"><svg viewBox="0 0 24 24"><path d="M12 3 2 20h20L12 3zM12 10v5M12 17.5v.5"/></svg><p id="zoneText">낚시 금지·출입 통제는 관할 기관의 최신 고시 데이터를 등록한 뒤 표시됩니다.</p></div>
-              <div class="cctv-empty"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="13" height="10" rx="2"/><path d="m16 11 5-3v8l-5-3"/></svg><b>등록된 CCTV가 없습니다</b><small>영상 연동 전 · 플레이스홀더</small></div>
-              <div id="occupancyBadge" class="occupancy"><span>AI 인원 감지</span><div><b id="occupancyCount">—</b><em id="occupancyStatus" class="pill dot">데이터 없음</em></div></div>
+              <div class="cctv-tabs"><button class="active" type="button">CAM-01</button><button type="button">CAM-02</button></div>
+              <div class="cctv-demo" aria-label="CCTV 데모 영상"><div class="cctv-water"></div><div class="cctv-breakwater"></div><div class="cctv-tetrapod"></div><div class="cctv-overlay top"><span><i></i> LIVE</span><time id="cctvTimestamp">2026-10-09 16:47:00</time><b>CAM-01-BUSAN</b></div><div class="person-box p1"><b>Person 1</b></div><div class="person-box p2"><b>Person 2</b></div><div class="person-box p3"><b>Person 3</b></div><div class="cctv-overlay bottom"><span id="cctvLocation">북항 방파제 · 입구 방향</span><span>데모 장면 · 3명 고정</span></div></div>
+              <div id="occupancyBadge" class="occupancy"><span>AI 인원 감지</span><div><b id="occupancyCount">3명</b><em id="occupancyStatus" class="pill dot">정상 인원 감지</em></div></div>
               <div class="emergency-actions"><button id="broadcastButton">위험 안내방송</button><button id="dispatchButton">출동 요청</button></div>
             </article>
           </div>
-
+ 
           <article class="panel alert-card">
             <div class="panel-title"><div><p class="eyebrow">AI 안전 감지</p><h3>실시간 안전 알림</h3></div><button class="more">전체 보기 →</button></div>
             <div id="alertList" class="alert-list"></div>
@@ -91,8 +94,11 @@
       </div>
     </section>
   </main>
+
   <script src="data/locations.js"></script>
   <script src="map.js"></script>
+  <script src="risk-config.js"></script>
+  <script src="risk-calculator.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
