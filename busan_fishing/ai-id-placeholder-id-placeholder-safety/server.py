@@ -284,7 +284,7 @@ class Handler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         url = urlparse(self.path)
-
+        print(f"DEBUG do_GET: path={self.path!r}, parsed={url.path!r}", flush=True)
         if url.path == '/api/config':
             return self.send_json({'kakaoMapAppKey': os.getenv('KAKAO_MAP_APP_KEY') or None})
 
@@ -320,12 +320,52 @@ class Handler(SimpleHTTPRequestHandler):
                 return self.send_json({'error': 'unknown station', 'station': station_id}, 404)
             return self.send_json({'source': 'kma.sea_obs', 'station': station_id, 'observation': match})
 
+
+        if url.path == '/api/busan-cctv':
+            try:
+                result = get_busan_cctv(page=1, rows=100)
+                content = result.get('content', {})
+                items = content.get('items', [])
+                if isinstance(items, dict):
+                    items = [items]
+
+                return self.send_json({
+                    'source': 'Busan ITS CCTV',
+                    'count': len(items),
+                    'totalCount': content.get('totalCount', len(items)),
+                    'cctv': items
+                })
+            except Exception as error:
+                return self.send_json({
+                    'error': 'Busan CCTV API failed',
+                    'detail': str(error)
+                }, 502)
         return super().do_GET()
 
     def log_message(self, fmt, *args):
         if getattr(self, 'path', '').startswith('/api/'):
             super().log_message(fmt, *args)
 
+# 부산시 CCTV 목록 API
+
+BUSAN_CCTV_API_URL = "https://apis.data.go.kr/6260000/BusanITSCCTV/CCTVList" 
+def get_busan_cctv(page=1, rows=100): 
+    from urllib.parse import urlencode 
+    from urllib.request import Request, urlopen 
+# API 인증키는 환경변수에서 읽기 
+    key = os.getenv("BUSAN_CCTV_API_KEY") 
+    if not key: 
+        raise RuntimeError("BUSAN_CCTV_API_KEY가 설정되지 않았습니다.") 
+    params = urlencode({ 
+        "serviceKey": key, 
+        "pageNo": page, 
+        "numOfRows": rows, 
+        "resultType": 
+        "json", 
+        }) 
+    url = f"{BUSAN_CCTV_API_URL}?{params}" 
+    with urlopen(Request(url), timeout=15) as response: 
+        return json.loads(response.read().decode("utf-8"))
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', '3000'))

@@ -80,18 +80,7 @@ Index · HTML
               <div class="panel-title"><div><p class="eyebrow">금지구역 · CCTV</p><h3>금지구역 안내 및 CCTV</h3></div><span id="zoneBadge" class="zone-badge">검증 대기</span></div>
               <div class="zone-notice"><svg viewBox="0 0 24 24"><path d="M12 3 2 20h20L12 3zM12 10v5M12 17.5v.5"/></svg><p id="zoneText">낚시 금지·출입 통제는 관할 기관의 최신 고시 데이터를 등록한 뒤 표시됩니다.</p></div>
               <div class="cctv-tabs"><button class="active" type="button">CAM-01</button><button type="button">CAM-02</button></div>
-              <div class="cctv-demo cctv-player" aria-label="실제 CCTV 영상">
-                <video id="cctvVideo" controls autoplay muted playsinline></video>
-                <div class="cctv-overlay top">
-                  <span><i></i> STREAM</span>
-                  <time id="cctvTimestamp">영상 연결 대기</time>
-                  <b id="cctvCameraName">부산 CCTV</b>
-                </div>
-                <div class="cctv-overlay bottom">
-                  <span id="cctvLocation">CCTV 위치 확인 중</span>
-                  <span id="cctvStreamStatus">영상 연결 대기</span>
-                </div>
-              </div>
+              <div class="cctv-demo" aria-label="CCTV 데모 영상"><div class="cctv-water"></div><div class="cctv-breakwater"></div><div class="cctv-tetrapod"></div><div class="cctv-overlay top"><span><i></i> LIVE</span><time id="cctvTimestamp">2026-10-09 16:47:00</time><b>CAM-01-BUSAN</b></div><div class="person-box p1"><b>Person 1</b></div><div class="person-box p2"><b>Person 2</b></div><div class="person-box p3"><b>Person 3</b></div><div class="cctv-overlay bottom"><span id="cctvLocation">북항 방파제 · 입구 방향</span><span>데모 장면 · 3명 고정</span></div></div>
               <div id="occupancyBadge" class="occupancy"><span>AI 인원 감지</span><div><b id="occupancyCount">3명</b><em id="occupancyStatus" class="pill dot">정상 인원 감지</em></div></div>
               <div class="emergency-actions"><button id="broadcastButton">위험 안내방송</button><button id="dispatchButton">출동 요청</button></div>
             </article>

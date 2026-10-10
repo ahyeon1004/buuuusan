@@ -12,13 +12,20 @@ const DIRECTIONS = ['북', '북동', '동', '남동', '남', '남서', '서', '�
 const CCTV_COUNT = '04';
 const REFRESH_MS = 60000;
 // Keep the demo count consistent with the three people shown in the mock CCTV scene.
-const DEMO_OCCUPANCY_COUNT = 0; // CCTV 연동 전이므로 인원 0 (연동 후 실제 값으로 교체)
+const DEMO_OCCUPANCY_COUNT = 3; // 데모 CCTV의 고정 인원값; 실제 분석 연동 시 교체
 const PIER_OCCUPANCY = Object.fromEntries(window.BUSAN_AREAS.flatMap(area => area.piers.map(pier => [pier.id, DEMO_OCCUPANCY_COUNT])));
 
 let currentArea = window.BUSAN_AREAS.find(a => a.name === '영도구');
 let currentPier = currentArea.piers[0];
 let weatherRequest = 0;
 let activeCctv = 1;
+let mapStarted = false;
+
+function startMapWhenVisible() {
+  if (mapStarted) { refreshKakaoMapLayout(); return; }
+  mapStarted = true;
+  initializeKakaoMap();
+}
 
 function renderLocations() {
   const root = document.getElementById('districtList');
@@ -33,6 +40,7 @@ function renderLocations() {
       currentPier = currentArea.piers[0];
       renderLocations();
       updateDashboard();
+      playBusanCctv();
     };
   });
   root.querySelectorAll('.pier').forEach(button => {
@@ -40,6 +48,7 @@ function renderLocations() {
       currentPier = currentArea.piers.find(p => p.id === button.dataset.pier);
       renderLocations();
       updateDashboard();
+      playBusanCctv();
     };
   });
 }
@@ -57,22 +66,55 @@ function selectedRisk(weatherRisk) {
   return rank[peopleRisk] > rank[weatherRisk] ? peopleRisk : weatherRisk;
 }
 
-function renderRisk(risk) {
-  const chip = document.querySelector('.risk-chip');
-  chip.className = `risk-chip risk-${risk || 'none'}`;
-  document.getElementById('riskValue').textContent = risk ? RISK_LABEL[risk] : '산출값 없음';
-  const fill = document.getElementById('totalFill');
-  fill.style.width = risk ? `${RISK_FILL[risk]}%` : '0';
-  fill.style.background = risk ? `var(--${{ safe: 'green', warning: 'yellow', caution: 'orange', danger: 'red' }[risk]})` : '';
-  document.getElementById('totalValue').textContent = risk ? RISK_LABEL[risk] : '—';
-  document.getElementById('totalBadge').textContent = risk ? '실시간' : '산출값 없음';
-  document.getElementById('totalNote').textContent = risk ? '파고·풍속·강수 기준' : '환경 데이터 연동 후 표시';
+
+function renderRisk(result) {
+  const chip = document.querySelector(".risk-chip");
+  const score = result?.totalScore;
+  const available = result?.available === true;
+
+  const gradeClass = {
+    "안전": "safe",
+    "관심": "warning",
+    "주의": "caution",
+    "경계": "danger",
+    "심각": "danger",
+  };
+
+  const grade = available ? result.grade : "산정 불가";
+  const risk = available ? gradeClass[grade] : "none";
+
+  chip.className = `risk-chip risk-${risk}`;
+  document.getElementById("riskValue").textContent = grade;
+
+  const fill = document.getElementById("totalFill");
+  fill.style.width = available ? `${score}%` : "0";
+  fill.style.background = available
+    ? `var(--${{
+        safe: "green",
+        warning: "yellow",
+        caution: "orange",
+        danger: "red",
+      }[risk]})`
+    : "";
+
+  document.getElementById("totalValue").textContent =
+    available ? `${score} / 100점` : "산정 불가";
+
+  document.getElementById("totalBadge").textContent =
+    available ? "계산 완료" : "데이터 확인 필요";
+
+  document.getElementById("totalNote").textContent =
+    available
+      ? result.criteriaNotice
+      : "필수 관측값 또는 관측 시각을 확인하세요";
 }
 
 function updateCctvPanel() {
   const count = PIER_OCCUPANCY[currentPier.id] ?? 0;
   document.getElementById('occupancyCount').textContent = count > 0 ? `${count}명` : '—';
-  document.getElementById('occupancyStatus').textContent = count > 0 ? '감지 중' : '데이터 없음';
+  document.getElementById('occupancyStatus').textContent = count > 0 ? '정상 인원 감지' : '데이터 없음';
+  const location = document.getElementById('cctvLocation');
+  if (location) location.textContent = `${currentPier.name} · 입구 방향`;
 }
 
 function setKpi(valueId, noteId, value, unit, note, max) {
@@ -86,15 +128,19 @@ function setKpi(valueId, noteId, value, unit, note, max) {
   if (noteId) document.getElementById(noteId).textContent = note;
 }
 
-function riskFrom(marine, rain) {
-  const wave = marine?.wave?.value;
-  const wind = marine?.wind?.value;
-  const mm = rain?.value;
-  if (wave === null && wind === null && mm === null) return null;
-  if ((wave ?? 0) >= 2 || (wind ?? 0) >= 14 || (mm ?? 0) >= 10) return 'danger';
-  if ((wave ?? 0) >= 1 || (wind ?? 0) >= 9 || (mm ?? 0) >= 5) return 'caution';
-  if ((wave ?? 0) >= 0.5 || (wind ?? 0) >= 6 || (mm ?? 0) >= 1) return 'warning';
-  return 'safe';
+
+function calculateDashboardRisk(data) {
+  if (!data) {
+    return {
+      available: false,
+      totalScore: null,
+      grade: "산정 불가",
+      itemScores: null,
+      statuses: {},
+    };
+  }
+
+  return window.RiskCalculator.calculate(data);
 }
 
 function waveLabel(value) {
@@ -139,25 +185,97 @@ function updateDashboard() {
 }
 
 function applyWeather(data, { silent = false } = {}) {
-  const risk = data ? riskFrom(data.marine, data.rain) : null;
-  liveRisk[currentPier.id] = risk || undefined;
-  renderRisk(risk ? selectedRisk(risk) : null);
-
   if (!data) {
-    setKpi('rainValue', 'rainNote', null, 'mm', silent ? '센서 연동 전' : '불러오는 중', 20);
-    setKpi('windValue', 'windNote', null, 'm/s', silent ? '센서 연동 전' : '불러오는 중', 20);
-    setKpi('waveValue', 'waveNote', null, 'm', silent ? '센서 연동 전' : '불러오는 중', 3);
-    document.getElementById('dataSource').textContent = silent ? '기상 데이터 연동 전 · 갱신 시각 없음' : '관측 데이터 불러오는 중';
+    renderRisk(null);
+
+    setKpi(
+      'rainValue', 'rainNote', null, 'mm',
+      silent ? '센서 연동 전' : '불러오는 중', 20
+    );
+    setKpi(
+      'windValue', 'windNote', null, 'm/s',
+      silent ? '센서 연동 전' : '불러오는 중', 20
+    );
+    setKpi(
+      'waveValue', 'waveNote', null, 'm',
+      silent ? '센서 연동 전' : '불러오는 중', 3
+    );
+
+    document.getElementById('dataSource').textContent =
+      silent
+        ? '기상 데이터 연동 전 · 갱신 시각 없음'
+        : '관측 데이터 불러오는 중';
+
     return;
   }
 
   const { rain, marine } = data;
-  const wave = marine?.wave, wind = marine?.wind;
-  const val = (v, d = 1) => (v === null || v === undefined ? null : v.toFixed(d));
-  setKpi('rainValue', 'rainNote', val(rain?.value), 'mm', rain ? '지난 1시간' : '강수 관측 없음', 20);
-  setKpi('windValue', 'windNote', val(wind?.value), 'm/s', windNote(marine), 20);
-  setKpi('waveValue', 'waveNote', val(wave?.value), 'm', waveLabel(wave?.value), 3);
-  document.getElementById('dataSource').textContent = sourceLine(data);
+  const wave = marine?.wave;
+  const wind = marine?.wind;
+
+  const riskResult = calculateDashboardRisk(data);
+
+  liveRisk[currentPier.id] = riskResult.available
+    ? riskResult.grade
+    : undefined;
+
+  renderRisk(riskResult);
+
+  const val = (v, d = 1) =>
+    v === null || v === undefined || !Number.isFinite(Number(v))
+      ? null
+      : Number(v).toFixed(d);
+
+  // 강수량 표시
+  setKpi(
+    'rainValue',
+    'rainNote',
+    val(rain?.value),
+    'mm',
+    rain ? '지난 1시간' : '강수 관측 없음',
+    20
+  );
+
+  // 풍속 표시
+  setKpi(
+    'windValue',
+    'windNote',
+    val(wind?.value),
+    'm/s',
+    windNote(marine),
+    20
+  );
+
+  // 파고 표시
+  setKpi(
+    'waveValue',
+    'waveNote',
+    val(wave?.value),
+    'm',
+    waveLabel(wave?.value),
+    3
+  );
+
+  // 개별 항목 위험도 안내
+  const scores = riskResult.available
+    ? riskResult.itemScores
+    : null;
+
+  document.getElementById('rainNote').textContent = scores
+    ? `지난 1시간 · 위험도 ${scores.rainfall}점`
+    : `위험도 산정 불가 · ${riskResult.statuses?.rainfall || '데이터 확인 필요'}`;
+
+  document.getElementById('windNote').textContent = scores
+    ? `위험도 ${scores.windSpeed}점 · ${windNote(marine)}`
+    : `위험도 산정 불가 · ${riskResult.statuses?.windSpeed || '데이터 확인 필요'}`;
+
+  document.getElementById('waveNote').textContent = scores
+    ? `위험도 ${scores.waveHeight}점 · ${waveLabel(wave?.value)}`
+    : `위험도 산정 불가 · ${riskResult.statuses?.waveHeight || '데이터 확인 필요'}`;
+
+  document.getElementById('dataSource').textContent =
+    sourceLine(data);
+
   renderAlerts(data);
   updateKakaoMap(false);
 }
@@ -174,10 +292,19 @@ async function loadWeather() {
     if (!data.ok) throw new Error(data.errors?.join('; ') || 'empty payload');
     weatherCache[pier.id] = data;
     if (requestId === weatherRequest && pier.id === currentPier.id) applyWeather(data);
-  } catch (error) {
-    console.warn('Coastal weather unavailable', error);
+  } 
+  catch (error) {
+    console.warn("Coastal weather unavailable", error);
+
     if (requestId === weatherRequest && pier.id === currentPier.id) {
-      document.getElementById('dataSource').textContent = `관측 데이터 연결 실패 · ${error.message}`;
+    // 실패한 요청의 데이터는 최신 데이터로 취급하지 않음
+      delete weatherCache[pier.id];
+
+      applyWeather(null, { silent: true });
+
+      document.getElementById("dataSource").textContent =
+        `최신 기상 데이터 연결 실패 · ${error.message}`;
+
       renderAlerts(null, error);
     }
   }
@@ -197,7 +324,9 @@ function showDashboard() {
     loginPage.classList.remove('fade-out');
     dashboardPage.classList.remove('hidden');
     dashboardPage.animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'translateY(0)' }], { duration: 450, easing: 'ease-out' });
-    setTimeout(refreshKakaoMapLayout, 50);
+    // Kakao maps must be constructed after the hidden dashboard becomes visible.
+    // Initializing while display:none produces the blank white tile strip seen in the map panel.
+    setTimeout(startMapWhenVisible, 50);
   }, 430);
 }
 
@@ -295,6 +424,118 @@ setInterval(loadWeather, REFRESH_MS);
 renderLocations();
 renderAlerts(null);
 updateDashboard();
-initializeKakaoMap();
 applyTheme(localStorage.getItem('breakwaterTheme2') || 'light');
 if (localStorage.getItem('breakwaterLoggedIn') === 'true') showDashboard();
+
+
+
+
+async function loadBusanCctv() {
+  try {
+    const response = await fetch('/api/busan-cctv');
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+    const data = await response.json();
+    window.BUSAN_CCTV_LIST = data.cctv || [];
+
+    console.log(
+      '[부산 CCTV] 불러온 카메라:',
+      window.BUSAN_CCTV_LIST.length
+    );
+  } catch (error) {
+    console.error('[부산 CCTV] 목록을 불러오지 못했습니다.', error);
+    window.BUSAN_CCTV_LIST = [];
+  }
+}
+
+loadBusanCctv();
+
+// 실제 부산 CCTV 스트림 재생
+async function playBusanCctv() {
+  const video = document.getElementById('cctvVideo');
+  const status = document.getElementById('cctvStreamStatus');
+  const cameraName = document.getElementById('cctvCameraName');
+
+  if (!video || !status) return;
+
+  try {
+    if (!window.BUSAN_CCTV_LIST?.length) {
+      await loadBusanCctv();
+    }
+
+    const cameras = (window.BUSAN_CCTV_LIST || []).filter(c =>
+      c.hlsAddr && Number.isFinite(Number(c.lat)) &&
+      Number.isFinite(Number(c.lot))
+    );
+
+    const pier = currentPier;
+    const rad = value => value * Math.PI / 180;
+
+    function distanceKm(a, b) {
+      const dLat = rad(Number(b.lat) - Number(a.lat));
+      const dLon = rad(Number(b.lot) - Number(a.lng));
+      const h = Math.sin(dLat / 2) ** 2 +
+        Math.cos(rad(Number(a.lat))) * Math.cos(rad(Number(b.lat))) *
+        Math.sin(dLon / 2) ** 2;
+      return 6371 * 2 * Math.asin(Math.sqrt(h));
+    }
+
+    const ranked = cameras
+      .map(c => ({ camera: c, distance: distanceKm(pier, c) }))
+      .sort((a, b) => a.distance - b.distance);
+
+    const nearest = ranked[0];
+
+    if (!nearest || nearest.distance > 2) {
+      status.textContent = '근처 CCTV 없음 (2km 이내)';
+      document.getElementById('cctvLocation').textContent =
+        `${pier.name} · 연결 가능한 근거리 카메라 없음`;
+      cameraName.textContent = '카메라 미확인';
+      if (window.busanCctvPlayer) {
+        window.busanCctvPlayer.destroy();
+        window.busanCctvPlayer = null;
+      }
+      video.pause();
+      video.removeAttribute('src');
+      video.load();
+      return;
+    }
+
+    const camera = nearest.camera;
+
+    cameraName.textContent = camera.instlPos || '부산 CCTV';
+    document.getElementById('cctvLocation').textContent =
+      `${pier.name} · 가까운 CCTV: ${camera.instlPos || '위치 미상'} (${nearest.distance.toFixed(2)}km)`;
+
+    if (window.Hls && Hls.isSupported()) {
+      if (window.busanCctvPlayer) window.busanCctvPlayer.destroy();
+
+      const player = new Hls();
+      window.busanCctvPlayer = player;
+      player.loadSource(camera.hlsAddr);
+      player.attachMedia(video);
+
+      player.on(Hls.Events.MANIFEST_PARSED, () => {
+        video.play().catch(() => {
+          status.textContent = '재생 버튼을 눌러 주세요';
+        });
+      });
+
+      player.on(Hls.Events.ERROR, (_, data) => {
+        if (data.fatal) status.textContent = '스트림 재생 실패';
+      });
+
+      status.textContent = '스트림 연결 중';
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = camera.hlsAddr;
+      status.textContent = '스트림 연결 중';
+    } else {
+      status.textContent = '이 브라우저는 HLS 재생을 지원하지 않아요';
+    }
+  } catch (error) {
+    console.error('[CCTV 재생 오류]', error);
+    status.textContent = 'CCTV 연결 실패';
+  }
+}
+
+playBusanCctv();
